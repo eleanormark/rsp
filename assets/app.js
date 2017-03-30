@@ -8,10 +8,10 @@ var config = {
 };
 
 firebase.initializeApp(config);
-var database = firebase.database();
-var playersRef = database.ref().child('players');
-var currentTurnRef = database.ref().child('turn');
-var messageRef = database.ref().child('message');
+const database = firebase.database();
+const playersRef = database.ref().child('players');
+const currentTurnRef = database.ref().child('turn');
+const messageRef = database.ref().child('message');
 
 playersRef.on('value', function(snap) {
   console.log(snap.val());
@@ -34,7 +34,7 @@ var playerTwoExists = false;
 var playerOneData = null;
 var playerTwoData = null;
 
-Start button - takes username and tries to get user in game
+// Start button - takes username and tries to get user in game
 $("#start").click(function() {
   if ($("#username").val() !== "") {
     username = capitalize($("#username").val());
@@ -50,6 +50,56 @@ $("#username").keypress(function(e) {
     getInGame();
   }
 });
+
+
+// CHAT LISTENERS
+// Chat send button listener, grabs input and pushes to firebase. (Firebase's push automatically creates a unique key)
+$("#chat-send").click(function() {
+  if ($("#chat-input").val() !== "") {
+    var message = $("#chat-input").val();
+    messageRef.push({
+      name: username,
+      message: message,
+      time: firebase.database.ServerValue.TIMESTAMP,
+      idNum: playerNum
+    });
+    $("#chat-input").val("");
+  }
+});
+// Chatbox input listener
+$("#chat-input").keypress(function(e) {
+  if (e.keyCode === 13 && $("#chat-input").val() !== "") {
+    var message = $("#chat-input").val();
+    messageRef.push({
+      name: username,
+      message: message,
+      time: firebase.database.ServerValue.TIMESTAMP,
+      idNum: playerNum
+    });
+    $("#chat-input").val("");
+  }
+});
+
+// Update chat on screen when new message detected - ordered by 'time' value
+ messageRef.orderByChild("time").on("child_added", function(snapshot) {
+  // If idNum is 0, then its a disconnect message and displays accordingly
+  // If not - its a user chat message
+  if (snapshot.val().idNum === 0) {
+    $("#chat-messages").append("<p class=player" + snapshot.val().idNum + "><span>"
+    + snapshot.val().name + "</span>: " + snapshot.val().message + "</p>");
+  }
+  else {
+    $("#chat-messages").append("<p class=player" + snapshot.val().idNum + "><span>"
+    + snapshot.val().name + "</span>: " + snapshot.val().message + "</p>");
+  }
+  // Keeps div scrolled to bottom on each update.
+  $("#chat-messages").scrollTop($("#chat-messages")[0].scrollHeight);
+});
+
+// Function to capitalize usernames
+function capitalize(name) {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
 
 // Function to get in the game
 function getInGame() {
@@ -96,3 +146,54 @@ function getInGame() {
     alert("Sorry, Game Full! Try Again Later!");
   }
 }
+
+// Game logic - Tried to space this out and make it more readable. Displays who won, lost, or tie game in result div.
+// Increments wins or losses accordingly.
+function gameLogic(player1choice, player2choice) {
+  var playerOneWon = function() {
+    $("#result").html("<h2>" + playerOneData.name + "</h2><h2>Wins!</h2>");
+    if (playerNum === 1) {
+      playersRef.child("1").child("wins").set(playerOneData.wins + 1);
+      playersRef.child("2").child("losses").set(playerTwoData.losses + 1);
+    }
+  };
+  var playerTwoWon = function() {
+    $("#result").html("<h2>" + playerTwoData.name + "</h2><h2>Wins!</h2>");
+    if (playerNum === 2) {
+      playersRef.child("2").child("wins").set(playerTwoData.wins + 1);
+      playersRef.child("1").child("losses").set(playerOneData.losses + 1);
+    }
+  };
+  var tie = function() {
+      $("#result").html("<h2>Tie Game!</h2>");
+    };
+    if (player1choice === "Rock" && player2choice === "Rock") {
+      tie();
+    }
+    else if (player1choice === "Paper" && player2choice === "Paper") {
+      tie();
+    }
+    else if (player1choice === "Scissors" && player2choice === "Scissors") {
+      tie();
+    }
+    else if (player1choice === "Rock" && player2choice === "Paper") {
+      playerTwoWon();
+    }
+    else if (player1choice === "Rock" && player2choice === "Scissors") {
+      playerOneWon();
+    }
+    else if (player1choice === "Paper" && player2choice === "Rock") {
+      playerOneWon();
+    }
+    else if (player1choice === "Paper" && player2choice === "Scissors") {
+      playerTwoWon();
+    }
+    else if (player1choice === "Scissors" && player2choice === "Rock") {
+      playerTwoWon();
+    }
+    else if (player1choice === "Scissors" && player2choice === "Paper") {
+      playerOneWon();
+    }
+}
+
+

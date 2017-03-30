@@ -37,7 +37,7 @@ var playerTwoData = null;
 Start button - takes username and tries to get user in game
 $("#start").click(function() {
   if ($("#username").val() !== "") {
-    username = $("#username").val().toUpperCase();
+    username = capitalize($("#username").val());
     console.log(username);
     getInGame();
   }
@@ -46,7 +46,7 @@ $("#start").click(function() {
 // listener for 'enter' in username input
 $("#username").keypress(function(e) {
   if (e.keyCode === 13 && $("#username").val() !== "") {
-    username = $("#username").val().toUpperCase();
+    username = capitalize($("#username").val());
     getInGame();
   }
 });

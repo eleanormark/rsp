@@ -34,11 +34,19 @@ var playerTwoExists = false;
 var playerOneData = null;
 var playerTwoData = null;
 
-// Start button - takes username and tries to get user in game
+Start button - takes username and tries to get user in game
 $("#start").click(function() {
   if ($("#username").val() !== "") {
     username = $("#username").val().toUpperCase();
     console.log(username);
+    getInGame();
+  }
+});
+
+// listener for 'enter' in username input
+$("#username").keypress(function(e) {
+  if (e.keyCode === 13 && $("#username").val() !== "") {
+    username = $("#username").val().toUpperCase();
     getInGame();
   }
 });
@@ -49,6 +57,8 @@ function getInGame() {
   // Needed because Firebase's '.push()' creates its unique keys client side,
   // so you can't ".push()" in a ".onDisconnect"
   var chatDataDisc = database.ref("/message/" + Date.now());
+
+  console.log('chatDataDisc' + chatDataDisc);
   // Checks for current players, if theres a player one connected, then the user becomes player 2.
   // If there is no player one, then the user becomes player 1
   if (currentPlayers < 2) {
